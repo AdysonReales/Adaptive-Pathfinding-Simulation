@@ -45,15 +45,15 @@ void findPath(int width, int height, const vector<vector<int>>& grid, int startX
 
         if (closedSet[current->x][current->y]) { delete current; continue; }
         closedSet[current->x][current->y] = true;
-        
-        cout << "EVAL " << current->x << " " << current->y << "\n";
 
         for (int i = 0; i < 8; ++i) {
             int nx = current->x + dx[i];
             int ny = current->y + dy[i];
 
-            if (nx >= 0 && nx < width && ny >= 0 && ny < height && !closedSet[nx][ny] && grid[nx][ny] == 0) {
-                int gCost = current->g + ((i < 4) ? 10 : 14); 
+            if (nx >= 0 && nx < width && ny >= 0 && ny < height && !closedSet[nx][ny] && grid[nx][ny] != -1) {
+                int tile_weight = grid[nx][ny];
+                int move_cost = (i < 4) ? 10 : 14; 
+                int gCost = current->g + (move_cost * tile_weight); 
                 int hCost = (algo == 0) ? manhattanDistance(nx, ny, goalX, goalY) * 10 : 0;
                 
                 Node* neighbor = new Node(nx, ny, gCost, hCost, current);
@@ -80,11 +80,11 @@ int main() {
     int width, height, startX, startY, goalX, goalY, algo;
     if (!(cin >> width >> height >> startX >> startY >> goalX >> goalY >> algo)) return 1;
 
-    vector<vector<int>> grid(width, vector<int>(height, 0));
-    int x, y;
-    while (cin >> x >> y) {
-        if (x == -1 && y == -1) break;
-        if (x >= 0 && x < width && y >= 0 && y < height) grid[x][y] = 1;
+    vector<vector<int>> grid(width, vector<int>(height, 1));
+    int x, y, w;
+    while (cin >> x >> y >> w) {
+        if (x == -1 && y == -1 && w == -1) break;
+        if (x >= 0 && x < width && y >= 0 && y < height) grid[x][y] = w;
     }
 
     findPath(width, height, grid, startX, startY, goalX, goalY, algo);

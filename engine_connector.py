@@ -6,7 +6,7 @@ class CppEngineConnector:
     def __init__(self):
         self.exe = './engine.exe' if sys.platform.startswith('win') else './engine'
 
-    def calculate_path(self, w, h, start, goal, algo, walls):
+    def calculate_path(self, w, h, start, goal, algo, active_cells):
         startupinfo = None
         if sys.platform.startswith('win'):
             startupinfo = subprocess.STARTUPINFO()
@@ -18,8 +18,11 @@ class CppEngineConnector:
             return [], []
         
         data = f"{w} {h} {start[0]} {start[1]} {goal[0]} {goal[1]} {algo}\n"
-        for wx, wy in walls: data += f"{wx} {wy}\n"
-        data += "-1 -1\n"
+        for (cx, cy), t_type in active_cells.items():
+            from config import TERRAIN
+            weight = TERRAIN[t_type]["weight"]
+            data += f"{cx} {cy} {weight}\n"
+        data += "-1 -1 -1\n"
         
         stdout, _ = process.communicate(input=data)
         
