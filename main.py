@@ -34,6 +34,10 @@ class SimulationEngine:
         self.paths = {} 
         self.known_cells = {} 
         
+        # Code highlights caching
+        self.execution_steps = []
+        self.current_cpp_line = "LINE_INIT"
+        
         self.grid_sizes = [10, 20, 30, 40, 50]
         self.current_grid_idx = 1
         self.grid = GridManager(self.grid_sizes[self.current_grid_idx], self.grid_sizes[self.current_grid_idx], DEFAULT_CELL_SIZE)
@@ -78,6 +82,8 @@ class SimulationEngine:
         self.grid.path_nodes.clear()
         self.grid.evaluated_nodes.clear()
         self.paths.clear()
+        self.execution_steps.clear()
+        self.current_cpp_line = "LINE_INIT"
         self.stats = {"status": "Idle", "steps": 0, "recalcs": 0, "algorithm": ALGORITHMS[self.current_algo]}
 
     def generate_natural_terrain(self, w, h):
@@ -189,6 +195,10 @@ class SimulationEngine:
             
             self.update_dynamic_elements()
             
+            # Pop and flash the next line execution directly onto the UI terminal
+            if self.execution_steps:
+                self.current_cpp_line = self.execution_steps.pop(0)
+            
             if self.current_scenario == 6:
                 for zx, zy in self.grid.zombies:
                     for fx in range(self.grid.width):
@@ -218,19 +228,18 @@ class SimulationEngine:
                     self.stats["recalcs"] += 1
                     
                     temp_cells = active_cells.copy()
-                    # UNIQUE ROUTING LOGIC FOR SCENARIO 7
                     if self.current_scenario == 7:
                         for oz_idx, oz_pos in enumerate(self.grid.zombies):
                             if oz_idx != i and oz_pos != self.grid.villager:
-                                # Apply temporary high cost over other zombies so unique paths are evaluated
                                 temp_cells[oz_pos] = "Mud" 
                                 
-                    p, e = self.engine.calculate_path(self.grid.width, self.grid.height, z_pos, self.grid.villager, self.current_algo, temp_cells)
+                    p, e, st = self.engine.calculate_path(self.grid.width, self.grid.height, z_pos, self.grid.villager, self.current_algo, temp_cells)
                     
                     if p: 
                         if p[0] == z_pos: p.pop(0) 
                         self.paths[i] = p
                         self.grid.evaluated_nodes = e
+                        self.execution_steps = st # Load live trace steps
                     else:
                         if self.current_scenario != 6:
                             self.is_simulating = False
@@ -314,7 +323,7 @@ class SimulationEngine:
             self.ui.draw_dashboard(
                 self.current_scenario, self.current_algo, self.stats, self.current_tool, 
                 self.show_terminal, self.grid_sizes[self.current_grid_idx], reqs, reqs_met, 
-                self.is_simulating, SPEEDS[self.speed_idx][0], self.target_moving
+                self.is_simulating, SPEEDS[self.speed_idx][0], self.target_moving, self.current_cpp_line
             )
         pygame.display.flip()
 

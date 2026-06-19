@@ -20,6 +20,7 @@ struct CompareNode {
 int manhattanDistance(int x1, int y1, int x2, int y2) { return abs(x1 - x2) + abs(y1 - y2); }
 
 void findPath(int width, int height, const vector<vector<int>>& grid, int startX, int startY, int goalX, int goalY, int algo) {
+    cout << "STEP LINE_INIT\n"; // Highlight initialization
     priority_queue<Node*, vector<Node*>, CompareNode> pq;
     queue<Node*> q; 
     vector<vector<bool>> closedSet(width, vector<bool>(height, false));
@@ -35,22 +36,29 @@ void findPath(int width, int height, const vector<vector<int>>& grid, int startX
     Node* targetNode = nullptr;
 
     while ((algo == 1 && !q.empty()) || (algo != 1 && !pq.empty())) {
+        cout << "STEP LINE_WHILE\n"; // While loop check
         Node* current;
         if (algo == 1) { current = q.front(); q.pop(); }
         else { current = pq.top(); pq.pop(); }
 
+        cout << "STEP LINE_POP\n"; // Pop lowest cost
         if (current->x == goalX && current->y == goalY) {
+            cout << "STEP LINE_GOAL\n"; // Goal check true
             targetNode = current; break;
         }
 
         if (closedSet[current->x][current->y]) { delete current; continue; }
         closedSet[current->x][current->y] = true;
+        
+        cout << "EVAL " << current->x << " " << current->y << "\n";
+        cout << "STEP LINE_CLOSE\n"; // Add to closed set
 
         for (int i = 0; i < 8; ++i) {
             int nx = current->x + dx[i];
             int ny = current->y + dy[i];
 
             if (nx >= 0 && nx < width && ny >= 0 && ny < height && !closedSet[nx][ny] && grid[nx][ny] != -1) {
+                cout << "STEP LINE_NEIGHBOR\n"; // Evaluate neighbors loop
                 int tile_weight = grid[nx][ny];
                 int move_cost = (i < 4) ? 10 : 14; 
                 int gCost = current->g + (move_cost * tile_weight); 

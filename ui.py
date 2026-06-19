@@ -31,7 +31,7 @@ class UIManager:
         self.screen.blit(txt, (rect.centerx - txt.get_width()//2, rect.centery - txt.get_height()//2))
         if not disabled: self.buttons[action_code] = rect
 
-    def draw_dashboard(self, cur_scen, cur_algo, stats, cur_tool, show_term, grid_size, reqs, reqs_met, is_simulating, speed_name, tgt_moving):
+    def draw_dashboard(self, cur_scen, cur_algo, stats, cur_tool, show_term, grid_size, reqs, reqs_met, is_simulating, speed_name, tgt_moving, current_code_line):
         self.buttons.clear()
         taskbar_y = SCREEN_H - 80
 
@@ -62,7 +62,7 @@ class UIManager:
         self.create_btn("Menu", SCREEN_W - 80, taskbar_y + 25, 60, 30, "MENU", color=(50, 50, 50))
 
         # LEFT SIDEBAR
-        start_x = 300 if show_term else 0
+        start_x = 350 if show_term else 0
         pygame.draw.rect(self.screen, C_UI_BG, (start_x, 0, 250, taskbar_y))
         pygame.draw.line(self.screen, C_WHITE, (start_x + 250, 0), (start_x + 250, taskbar_y))
         sc_data = SCENARIOS[cur_scen]
@@ -95,24 +95,36 @@ class UIManager:
             self.screen.blit(self.stats_font.render(str(v), True, C_WHITE), (rs_x + 150, sy))
             sy += 35
 
+        # f) REAL C++ CODE HIGH-LIGHTED TERMINAL PANEL
         if show_term:
-            pygame.draw.rect(self.screen, (10, 10, 15), (0, 0, 300, taskbar_y))
-            pygame.draw.line(self.screen, C_GREEN, (300, 0), (300, taskbar_y), 2)
-            self.screen.blit(self.title_font.render("ALGORITHM TERMINAL", True, C_GREEN), (20, 20))
-            lines = [
-                "1. Wait for Simulation Tick",
-                "2. If Target Moved/Blocked:",
-                "3.   Recalculate via C++",
-                "4. Move Zombie 1 Step",
-                "5. Save to Ghost Trail",
-                "6. If Zombie == Target:",
-                "7.   SUCCESS!"
+            term_w = 350
+            pygame.draw.rect(self.screen, (15, 15, 22), (0, 0, term_w, taskbar_y))
+            pygame.draw.line(self.screen, C_GREEN, (term_w, 0), (term_w, taskbar_y), 2)
+            self.screen.blit(self.title_font.render("LIVE C++ CODE TERMINAL", True, C_GREEN), (20, 20))
+            
+            cpp_code = [
+                ("LINE_INIT",     "pq.push(startNode); closedSet[sx][sy]=true;"),
+                ("LINE_WHILE",    "while (!pq.empty()) {"),
+                ("LINE_POP",      "  Node* curr = pq.top(); pq.pop();"),
+                ("LINE_GOAL",      "  if (curr->x == gx && curr->y == gy) break;"),
+                ("LINE_CLOSE",     "  closedSet[curr->x][curr->y] = true;"),
+                ("LINE_NEIGHBOR",  "  for(auto n : getNeighbors(curr)) {"),
+                ("LINE_NEIGHBOR",  "    if(valid) pq.push(n); } }")
             ]
+            
             cy = 70
-            for i, line in enumerate(lines):
-                text_col = C_YELLOW if (i == 3 and is_simulating) else (150, 150, 150)
-                self.screen.blit(self.stats_font.render(line, True, text_col), (20, cy))
-                cy += 25
+            for code_tag, code_str in cpp_code:
+                is_active = (code_tag == current_code_line and is_simulating)
+                if is_active:
+                    # Render a green highlight background under the line
+                    line_rect = pygame.Rect(15, cy - 2, term_w - 30, 20)
+                    pygame.draw.rect(self.screen, (39, 174, 96, 100), line_rect)
+                    text_col = (255, 255, 255)
+                else:
+                    text_col = (130, 140, 150)
+                
+                self.screen.blit(self.font.render(code_str, True, text_col), (20, cy))
+                cy += 24
 
     def handle_click(self, mx, my):
         for action, rect in self.buttons.items():
