@@ -35,6 +35,7 @@ class UIManager:
         self.buttons.clear()
         taskbar_y = SCREEN_H - 80
 
+        # BOTTOM TASKBAR
         pygame.draw.rect(self.screen, C_UI_BG, (0, taskbar_y, SCREEN_W, 80))
         pygame.draw.line(self.screen, C_WHITE, (0, taskbar_y), (SCREEN_W, taskbar_y))
         
@@ -59,6 +60,10 @@ class UIManager:
         tgt_color = C_GREEN if tgt_moving else C_RED
         self.create_btn("TGT: " + ("MOVE" if tgt_moving else "STAY"), 1030, taskbar_y + 25, 90, 30, "TOGGLE_TGT", color=tgt_color)
         self.create_btn("Reset", 1130, taskbar_y + 25, 60, 30, "RESET", color=C_RED)
+        
+        # ALGO TOGGLE BUTTON (Placed cleanly at X=1200)
+        self.create_btn(f"Algo: {ALGORITHMS[cur_algo]}", 1200, taskbar_y + 25, 110, 30, "TOGGLE_ALGO", color=(52, 73, 94), disabled=is_simulating)
+        
         self.create_btn("Menu", SCREEN_W - 80, taskbar_y + 25, 60, 30, "MENU", color=(50, 50, 50))
 
         # LEFT SIDEBAR
@@ -95,7 +100,7 @@ class UIManager:
             self.screen.blit(self.stats_font.render(str(v), True, C_WHITE), (rs_x + 150, sy))
             sy += 35
 
-        # f) REAL C++ CODE HIGH-LIGHTED TERMINAL PANEL
+        # REAL C++ CODE HIGH-LIGHTED TERMINAL PANEL
         if show_term:
             term_w = 350
             pygame.draw.rect(self.screen, (15, 15, 22), (0, 0, term_w, taskbar_y))
@@ -116,7 +121,6 @@ class UIManager:
             for code_tag, code_str in cpp_code:
                 is_active = (code_tag == current_code_line and is_simulating)
                 if is_active:
-                    # Render a green highlight background under the line
                     line_rect = pygame.Rect(15, cy - 2, term_w - 30, 20)
                     pygame.draw.rect(self.screen, (39, 174, 96, 100), line_rect)
                     text_col = (255, 255, 255)
